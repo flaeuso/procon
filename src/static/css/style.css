@@ -1,0 +1,7 @@
+body {
+  font-family: "Segoe UI", sans-serif;
+}
+table th, table td {
+  vertical-align: middle;
+  text-align: center;
+}

@@ -1,0 +1,82 @@
+# Byte-compiled Python files
+
+**pycache**/
+\*.py\[cod]
+\*\$py.class
+
+# C extensions
+
+\*.so
+
+# Distribution / packaging
+
+build/
+dist/
+\*.egg-info/
+.eggs/
+
+# Virtual environments
+
+venv/
+env/
+.venv/
+prc/
+
+# VSCode settings
+
+.vscode/
+
+# IDE/project files
+
+.idea/
+\*.suo
+\*.user
+\*.sln
+\*.sw?
+
+# macOS files
+
+.DS\_Store
+
+# Windows files
+
+Thumbs.db
+
+# Logs
+
+\*.log
+
+# SQLite database files
+
+/data/*.db
+/data/*.sqlite3
+
+# Raw data and downloaded files
+
+/raw/
+/data/raw/
+
+# Environment variables
+
+.env
+
+# Python egg files
+
+\*.egg
+
+# MyPy cache
+
+.mypy\_cache/
+
+# Coverage reports
+
+htmlcov/
+.coverage
+
+# Pytest cache
+
+.pytest\_cache/
+
+# Jupyter notebooks checkpoints
+
+.ipynb\_checkpoints/
