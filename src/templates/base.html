@@ -2,27 +2,25 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{% block title %}Cesta Básica{% endblock %}</title>
-  <!-- Bootstrap via CDN -->
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  />
-  <!-- seu CSS custom -->
-  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="/static/styles.css" />
 </head>
-<body class="bg-light">
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-    <div class="container">
-      <a class="navbar-brand" href="/">Cesta Básica</a>
-    </div>
-  </nav>
-  <main class="container">
+<body>
+  <header>
+    <h1>Cesta Básica Goiás</h1>
+    <nav>
+      <a href="/">Home</a> |
+      <a href="/scrape/procon">Rodar Scraper</a> |
+      <a href="/prices/">Todos os Preços</a> |
+      <a href="/prices/cheapest/">Top 3 Preços</a>
+    </nav>
+  </header>
+  <main>
     {% block content %}{% endblock %}
   </main>
-  <footer class="text-center py-4">
-    &copy; {{ now().year }} – Procon &amp; Dieese
+  <footer>
+    <p>Dados extraídos de PROCON &amp; DIEESE — gerado em {{ now().strftime("%d/%m/%Y %H:%M") }}</p>
   </footer>
 </body>
 </html>

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+  <h2>{{ title }}</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Fonte</th>
+        <th>Estado</th>
+        <th>Data</th>
+        <th>Produto</th>
+        <th>Preço (R$)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>{{ item.id }}</td>
+        <td>{{ item.source }}</td>
+        <td>{{ item.state or "-" }}</td>
+        <td>{{ item.date or "-" }}</td>
+        <td>{{ item.product }}</td>
+        <td>{{ "{:,.2f}".format(item.price) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
