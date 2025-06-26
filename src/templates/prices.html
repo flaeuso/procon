@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+  <h2>{{ title }}</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Fonte</th>
+        <th>Estado</th>
+        <th>Data</th>
+        <th>Produto</th>
+        <th>Preço (R$)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in items %}
+      <tr>
+        <td>{{ p.id }}</td>
+        <td>{{ p.source }}</td>
+        <td>{{ p.state or "-" }}</td>
+        <td>{{ p.date or "-" }}</td>
+        <td>{{ p.product }}</td>
+        <td>{{ "%.2f"|format(p.price) }}</td>
+      </tr>
+      {% endfor %}
+      {% if items|length == 0 %}
+      <tr><td colspan="6">Nenhum registro encontrado.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+{% endblock %}

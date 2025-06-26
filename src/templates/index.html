@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Top {{ n }} Cestas Mais Baratas{% endblock %}
+
+{% block content %}
+  <h1 class="mb-4">Top {{ n }} Cestas Mais Baratas</h1>
+
+  {% if ofertas %}
+    <table class="table table-striped table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Origem</th>
+          <th>Estado</th>
+          <th>Data</th>
+          <th>Preço (R$)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in ofertas %}
+        <tr>
+          <td>{{ o.id }}</td>
+          <td>{{ o.source }}</td>
+          <td>{{ o.state or "-" }}</td>
+          <td>{{ o.date or "-" }}</td>
+          <td>{{ "{:,.2f}".format(o.price).replace(",", "X").replace(".", ",").replace("X", ".") }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="alert alert-warning">Nenhuma oferta encontrada.</div>
+  {% endif %}
+{% endblock %}

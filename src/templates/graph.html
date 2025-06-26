@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Gráfico {{ city }} — Cesta Básica{% endblock %}
+
+{% block content %}
+  <h2>Evolução da Cesta Básica em {{ city }}</h2>
+  <img src="{{ url_for('graph_by_city', city=city) }}" alt="Gráfico de preços em {{ city }}" />
+  <p><a href="{{ url_for('ui_cities') }}">← Voltar à lista de cidades</a></p>
+{% endblock %}

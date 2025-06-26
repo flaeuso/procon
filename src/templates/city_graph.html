@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Gráfico — {{ city }}{% endblock %}
+{% block content %}
+  <h2>Preço da Cesta Básica em {{ city }}</h2>
+  <img src="{{ url_for('api_city_graph', city=city) }}" alt="Gráfico de preços em {{ city }}"/>
+{% endblock %}
