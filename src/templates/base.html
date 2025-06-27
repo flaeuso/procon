@@ -8,18 +8,21 @@
 </head>
 <body>
   <header>
-    <h1>Cesta Básica</h1>
+    <h1>Cesta Básica & Salário Mínimo</h1>
     <nav>
       <a href="/">Home</a> |
       <a href="/scrape/procon">Rodar Scraper</a> |
+      <a href="/scrape/minimum-wage">Scrape Salário Mínimo</a> |
       <a href="/clean_db">Limpar DB</a> |
       <a href="/process_prices">Processar Preços</a> |
       <a href="/prices/">Todos os Preços</a> |
       <a href="/prices/cheapest/">Top 3 Mais Baratas</a> |
-      <a href="/cities/">Cidades</a>
+      <a href="/salario-minimo">Salário Mínimo</a>
     </nav>
   </header>
-  <main>{% block content %}{% endblock %}</main>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
   <footer>
     <p>Dados extraídos de PROCON &amp; DIEESE — gerado em {{ now.strftime("%d/%m/%Y %H:%M") }}</p>
   </footer>

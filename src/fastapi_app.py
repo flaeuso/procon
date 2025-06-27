@@ -16,29 +16,30 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
-# --- Ajustes de path para import local ---
+# — Ajuste de path para imports locais —
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PARENT_DIR = os.path.dirname(BASE_DIR)
 for p in (BASE_DIR, PARENT_DIR):
     if p not in sys.path:
         sys.path.append(p)
 
-# Importa scraper e processamento de preços
+# Imports dos módulos de scraping e processamento
 from scraper.procon_scraper import scrape_and_save
 from process_prices import main as process_prices_main
+from scraper.salario_minimo import save_to_db as save_minimum_wage  # assume retorna contagem
 
 # Caminho do banco SQLite
 DB_PATH = Path(PARENT_DIR) / "data" / "prices.db"
 
 app = FastAPI(title="API Procon & Cesta Básica")
 
-# Monta pasta estática (CSS, JS, etc.)
+# Monta pasta estática
 app.mount("/static", StaticFiles(directory=str(Path(BASE_DIR) / "static")), name="static")
 
-# Configura templates Jinja2
+# Templates Jinja2
 templates = Jinja2Templates(directory=str(Path(BASE_DIR) / "templates"))
 
-# Modelo Pydantic para preços
+# --- Modelos Pydantic ---
 class BasketPrice(BaseModel):
     id: int
     source: str
@@ -47,6 +48,13 @@ class BasketPrice(BaseModel):
     product: str
     price: float
 
+class MinimumWage(BaseModel):
+    id: int
+    date: str
+    nominal: float
+    necessario: float
+
+# --- Função utilitária de conexão ao DB ---
 def get_db_connection():
     if not DB_PATH.exists():
         raise HTTPException(status_code=500, detail=f"Banco não encontrado: {DB_PATH}")
@@ -60,17 +68,19 @@ def get_db_connection():
 
 @app.get("/scrape/procon")
 def scrape_procon():
-    """
-    Executa o scraper (PROCON, DIEESE, UEG, SIDRA) e retorna os arquivos baixados.
-    """
     files = scrape_and_save()
     return {"status": "ok", "arquivos_baixados": files, "quantidade": len(files)}
 
+@app.get("/scrape/minimum-wage")
+def scrape_minimum_wage():
+    """
+    Executa a coleta de salário mínimo no DIEESE e salva no banco.
+    """
+    count = save_minimum_wage()
+    return {"status": "ok", "records": count}
+
 @app.get("/clean_db")
 def clean_db():
-    """
-    Limpa toda a tabela de preços.
-    """
     conn = get_db_connection()
     conn.execute("DELETE FROM basket_prices")
     conn.commit()
@@ -79,9 +89,6 @@ def clean_db():
 
 @app.get("/process_prices")
 def process_prices():
-    """
-    Executa o script de extração de preços e insere no banco.
-    """
     process_prices_main()
     return {"status": "ok", "processed": True}
 
@@ -91,9 +98,6 @@ def process_prices():
 
 @app.get("/api/prices/", response_model=list[BasketPrice])
 def api_read_all_prices():
-    """
-    Retorna todos os registros de preços, ordenados por data decrescente.
-    """
     conn = get_db_connection()
     rows = conn.execute("SELECT * FROM basket_prices ORDER BY date DESC").fetchall()
     conn.close()
@@ -101,18 +105,12 @@ def api_read_all_prices():
 
 @app.get("/api/prices/cheapest/", response_model=list[BasketPrice])
 def api_read_cheapest(n: int = 3):
-    """
-    Retorna as n cestas mais baratas de todo o banco.
-    """
     all_prices = api_read_all_prices()
     cheapest = sorted(all_prices, key=lambda x: x.price)[:n]
     return cheapest
 
 @app.get("/api/cities/", response_model=list[str])
 def api_list_cities():
-    """
-    Lista todas as cidades (state) distintas disponíveis no banco.
-    """
     conn = get_db_connection()
     rows = conn.execute("""
         SELECT DISTINCT state
@@ -125,9 +123,6 @@ def api_list_cities():
 
 @app.get("/api/cities/{city}/prices", response_model=list[BasketPrice])
 def api_prices_by_city(city: str):
-    """
-    Retorna todos os preços da cesta para uma city específica, ordenados por data.
-    """
     conn = get_db_connection()
     rows = conn.execute(
         "SELECT * FROM basket_prices WHERE state = ? ORDER BY date", (city,)
@@ -137,9 +132,6 @@ def api_prices_by_city(city: str):
 
 @app.get("/api/cities/{city}/graph.png")
 def api_city_graph(city: str):
-    """
-    Gera e retorna um gráfico PNG do histórico de preços da cesta na city.
-    """
     conn = get_db_connection()
     rows = conn.execute(
         "SELECT date, price FROM basket_prices WHERE state = ? ORDER BY date", (city,)
@@ -147,11 +139,9 @@ def api_city_graph(city: str):
     conn.close()
     if not rows:
         raise HTTPException(status_code=404, detail=f"Sem dados para {city}")
-    # Extrai datas e preços
     dates = [datetime.fromisoformat(r["date"]) for r in rows if r["date"]]
     prices = [r["price"] for r in rows if r["date"]]
-    # Monta gráfico
-    plt.figure(figsize=(8,4))
+    plt.figure(figsize=(8, 4))
     plt.plot(dates, prices, marker="o")
     plt.title(f"Cesta Básica em {city}")
     plt.xlabel("Data")
@@ -163,16 +153,19 @@ def api_city_graph(city: str):
     buf.seek(0)
     return StreamingResponse(buf, media_type="image/png")
 
+@app.get("/api/minimum-wage/", response_model=list[MinimumWage])
+def api_read_minimum_wage():
+    conn = get_db_connection()
+    rows = conn.execute("SELECT * FROM minimum_wage ORDER BY date").fetchall()
+    conn.close()
+    return [MinimumWage(**dict(r)) for r in rows]
+
 # -----------------------------
 # Endpoints HTML / UI
 # -----------------------------
 
 @app.get("/", response_class=HTMLResponse)
 def ui_home(request: Request):
-    """
-    Página inicial com menu de navegação.
-    """
-    # Passa um timestamp pronto para formatação em Jinja
     return templates.TemplateResponse("base.html", {
         "request": request,
         "now": datetime.now()
@@ -180,9 +173,6 @@ def ui_home(request: Request):
 
 @app.get("/prices/", response_class=HTMLResponse)
 def ui_all_prices(request: Request):
-    """
-    Página que mostra todos os preços.
-    """
     items = api_read_all_prices()
     return templates.TemplateResponse("prices.html", {
         "request": request,
@@ -193,9 +183,6 @@ def ui_all_prices(request: Request):
 
 @app.get("/prices/cheapest/", response_class=HTMLResponse)
 def ui_cheapest(request: Request, n: int = 3):
-    """
-    Página que mostra as Top n cestas mais baratas.
-    """
     items = api_read_cheapest(n)
     return templates.TemplateResponse("prices.html", {
         "request": request,
@@ -206,9 +193,6 @@ def ui_cheapest(request: Request, n: int = 3):
 
 @app.get("/cities/", response_class=HTMLResponse)
 def ui_cities(request: Request):
-    """
-    Página que lista todas as cidades disponíveis.
-    """
     cities = api_list_cities()
     return templates.TemplateResponse("cities.html", {
         "request": request,
@@ -218,12 +202,18 @@ def ui_cities(request: Request):
 
 @app.get("/cities/{city}/graph", response_class=HTMLResponse)
 def ui_city_graph(request: Request, city: str):
-    """
-    Página com o gráfico de histórico para a city selecionada.
-    """
-    # Apenas renderiza o template; a imagem vem de /api/cities/{city}/graph.png
+    # o gráfico é servido por /api/cities/{city}/graph.png
     return templates.TemplateResponse("city_graph.html", {
         "request": request,
         "city": city,
+        "now": datetime.now()
+    })
+
+@app.get("/salario-minimo", response_class=HTMLResponse)
+def ui_salario_minimo(request: Request):
+    records = api_read_minimum_wage()
+    return templates.TemplateResponse("salary.html", {
+        "request": request,
+        "records": records,
         "now": datetime.now()
     })

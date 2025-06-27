@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Salário Mínimo{% endblock %}
+
+{% block content %}
+  <h2>Histórico do Salário Mínimo</h2>
+
+  <p>
+    <a href="/scrape/minimum-wage">🔄 Atualizar dados</a>
+  </p>
+
+  {% if records %}
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Nominal (R$)</th>
+          <th>Necessário (R$)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in records %}
+          <tr>
+            <td>{{ row.date }}</td>
+            <td>{{ "%.2f"|format(row.nominal) }}</td>
+            <td>{{ "%.2f"|format(row.necessario) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p><em>Não há registros de salário mínimo cadastrados.</em></p>
+  {% endif %}
+{% endblock %}
